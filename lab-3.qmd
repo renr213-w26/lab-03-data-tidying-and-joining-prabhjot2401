@@ -246,13 +246,22 @@ countries_of_interest <- c(
 countries_of_interest
 ```
 
-I chose these five countries as they represent some of the world's largest economies accross different continents.
+I chose these five countries as they represent some of the world's largest economies across continents.
 
 b\. In a single pipeline, filter your reshaped dataset to include only the `countries_of_interest` from part (a), and save the resulting data frame with a new name so you (1) can refer to this data frame later in your analysis and (2) do not overwrite the data frame you're starting with. Use a short but informative name. Then, in a new pipeline, find the `distinct()` countries in the data frame you created.
 
 ::: callout-tip
 The number of distinct countries in the filtered data frame you created in part (b) should equal the number of countries you chose in part (a). If it doesn't, you might have misspelled a country name or made a mistake in how to filter for these countries. Go back and check your code.
 :::
+
+```{r}
+country_inflation_filtered <- country_inflation_long |>
+  filter(country %in% countries_of_interest)
+country_inflation_filtered
+country_inflation_filtered |>
+  distinct(country)
+```
+
 
 ### Question 7
 
@@ -265,6 +274,30 @@ Requirements for the plot:
 -   Axes and legend should be properly labeled.
 -   The plot should have an appropriate title (and optionally a subtitle).
 -   Plot should be customized in at least one way – you could use a different than default color scale, or different than default theme, or some other customization.
+
+```{r}
+ggplot(
+  country_inflation_filtered,
+  aes(x = year, y = annual_inflation, color = country, shape = country)
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_color_viridis_d(option = "plasma", end = 0.9) +
+  labs(
+    title = "Annual Inflation Rates Across Major World Economies",
+    subtitle = "1993-2021",
+    x = "Year",
+    y = "Annual Inflation Rate (%)",
+    color = "Country",
+    shape = "Country"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "bottom"
+  )
+
+```
 
 ::: render-commit-push
 If you haven't yet done so, now is a good time to render, commit, and push. Make sure that you commit and push all changed documents and your Git pane is completely empty before proceeding.
@@ -297,13 +330,25 @@ Let's load both of these files.
 
 us_inflation <- read_csv("data/us-inflation.csv")
 cpi_divisions <- read_csv("data/cpi-divisions.csv")
+
 ```
 
 ### Question 8
 
 a\. How many columns and how many rows does the `us_inflation` dataset have? What are the variables in it? Add a brief (1-2 sentences) narrative summarizing this information.
+```{r}
+glimpse(us_inflation)
+```
+
+The `us_inflation` dataset has 4 columns and 132 rows . The variables are: `country` (always "United States"), `cpi_division_id` (a numeric identifier from 1-12), `year` (the year of observation), and `annual_inflation` (the annual inflation rate for that division and year).
+
 
 b\. How many columns and how many rows does the `cpi_divisions` dataset have? What are the variables in it? Add a brief (1-2 sentences) narrative summarizing this information.
+```{r}
+glimpse(cpi_divisions
+)
+```
+The `cpi_divisions` dataset has 2 columns and 12 rows. The variables are: `id` (a numeric identifier from 1-12 matching the CPI division codes) and `description` (a text description of what each division represents, such as "Food and non-Alcoholic beverages".
 
 c\. Create a new dataset by joining the `us_inflation` dataset with the `cpi_division_id` dataset.
 
@@ -314,6 +359,13 @@ c\. Create a new dataset by joining the `us_inflation` dataset with the `cpi_div
 -   Use a short but informative name for the joined dataset, and do not overwrite either of the datasets that go into creating it.
 
 Then, find the number of rows and columns of the resulting dataset and report the names of its columns. Add a brief (1-2 sentences) narrative summarizing this information.
+```{r}
+us_inflation_joined <- us_inflation |>
+  left_join(cpi_divisions, by = c("cpi_division_id" = "id"))
+
+glimpse(us_inflation_joined)
+```
+The joined dataset `us_inflation_joined` has 5 columns and 132 rows. The columns are: `country`, `cpi_division_id`, `year`, `annual_inflation`, and `description`. A left join was most appropriate because we want to keep all the inflation data and add the descriptive labels from `cpi_divisions`.
 
 ### Question 9
 
@@ -322,8 +374,28 @@ a\. Create a vector called `divisions_of_interest` which contains the descriptio
 ::: callout-tip
 Refer back to the guidance provided in [Question 6] if you're not sure how to create this vector.
 :::
+```{r}
+divisions_of_interest <- c(
+  "Food and non-Alcoholic beverages",
+  "Housing, water, electricity, gas and other fuels",
+  "Transport",
+  "Health",
+  "Education"
+)
+```
+I chose these five divisions because they represent essential spending categories that most households face.
 
 b\. In a single pipeline, filter your reshaped dataset to include only the `divisions_of_interest` from part (a), and save the resulting data frame with a new name so you (1) can refer to this data frame later in your analysis and (2) do not overwrite the data frame you're starting with. Use a short but informative name. Then, in a new pipeline, find the `distinct()` divisions in the data frame you created.
+
+```{r}
+us_inflation_filtered <- us_inflation_joined |>
+  filter(description %in% divisions_of_interest)
+us_inflation_filtered
+
+us_inflation_filtered |>
+  distinct(description)
+```
+
 
 ### Question 10
 
@@ -337,10 +409,24 @@ Using your data frame from the previous question, create a plot of annual inflat
 -   If your legend has labels that are too long, you can try moving the legend to the bottom and stack the labels vertically. *Hint:* The `legend.position` and `legend.direction` arguments of the `theme()` functions will be useful.
 
 ```{r}
-ggplot(...) +
-  ... +
+ggplot(
+  us_inflation_filtered,
+  aes(x = year, y = annual_inflation, color = description, shape = description)
+) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  labs(
+    title = "Annual Inflation Rates by CPI Division in the United States",
+    subtitle = "1993-2021",
+    x = "Year",
+    y = "Annual Inflation Rate (%)",
+    color = "CPI Division",
+    shape = "CPI Division"
+  ) +
+  theme_gray() +
   theme(
-    legend.position = "bottom", 
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "bottom",
     legend.direction = "vertical"
   )
 ```
