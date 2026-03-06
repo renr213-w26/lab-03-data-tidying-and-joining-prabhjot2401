@@ -1,6 +1,7 @@
 ---
 title: "Lab 3 - Data tidying and joining"
 categories: "Lab"
+author: "Prabhjot Singh"
 ---
 
 # Introduction
@@ -102,8 +103,17 @@ country_inflation <- read_csv("data/country-inflation.csv")
 Get to know the data.
 
 a.  `glimpse()` at the `country_inflation` data frame and answer the following questions based on the output. How many rows does `country_inflation` have and what does each row represent? How many columns does `country_inflation` have and what does each column represent?
+```{r}
+glimpse(country_inflation)
+```
+
+country_inflation has 44 rows and each row represents a country. It has 30 columns each representing inflation rate in the country in that year.
 
 b.  Display a list of the countries included in the dataset.
+```{r}
+country_inflation|>pull(country)
+```
+
 
 ::: callout-tip
 A function that can be useful for part (b) is `pull()`. Check out its documentation for examples of usage.
@@ -112,6 +122,13 @@ A function that can be useful for part (b) is `pull()`. Check out its documentat
 ### Question 2
 
 Which countries had the top three highest inflation rates in 2021? Your output should be a data frame with two columns, `country` and `2021`, with inflation rates in descending order, and three rows for the top three countries. Briefly comment on how the inflation rates for these countries compare to the inflation rate for United States in that year.
+```{r}
+country_inflation |>
+  select(country, `2021`) |>
+  arrange(desc(`2021`)) |>
+  slice(1:3)
+```
+The top three countries with the highest inflation rates in 2021 were Argentina, Turkiye, and Brazil. Argentina had an inflation rate of approximately 48.4%, Turkiye around 19.6%, and Brazil around 8.3%. In comparison, the United States had a relatively moderate inflation rate of about 4.7% in 2021, significantly lower than these three countries, particularly Argentina and Turkey.
 
 ::: callout-tip
 Column names that are numbers are not considered "proper" in R, therefore to select them you'll need to surround them with backticks, e.g. `select(` `` ` `` `1993` `` ` `` `)`.
@@ -128,6 +145,13 @@ In a single pipeline,
 Do not save this new variable in `inf_ratio`, only calculate and display it so you can answer the following question based on the output of the pipeline.
 
 Which country's inflation change is the largest over this time period? Did inflation increase of decrease between 1993 and 2021 in this country?
+```{r}
+country_inflation |>
+  mutate(inf_ratio = `2021` / `1993`) |>
+  arrange(desc(inf_ratio)) |>
+  select(country, inf_ratio)
+```
+The country with the largest inflation change over this time period is New Zealand, with an inflation ratio of approximately 3. This indicates that inflation increased between 1993 and 2021, as the ratio is greater than 1.
 
 ::: callout-tip
 For this question you'll once again need to use variables whose names are numbers (years) in your pipeline. Make sure to surround the names of such variables with backticks (`` ` ``).
@@ -146,6 +170,18 @@ Requirements:
 ::: callout-important
 The remaining questions in Part 1 require the use of the pivoted data frame from Question 4.
 :::
+```{r}
+country_inflation_long <- country_inflation |>
+  pivot_longer(
+    cols = -country,
+    names_to = "year",
+    values_to = "annual_inflation",
+    names_transform = as.numeric
+  )
+
+country_inflation_long
+```
+The reshaped data frame `country_inflation_long` has 1,276 rows and 3 columns: `country`, `year`, and `annual_inflation`. 
 
 ### Question 5
 
@@ -155,13 +191,32 @@ Requirement: Your code must use the `filter()` function for each part, not `arra
 
 a.  What is the highest inflation rate observed between 1993 and 2021? The output of the pipeline should be a data frame with one row and three columns. In addition to code and output, your response should include a single sentence stating the country and year.
 
+```{r}
+country_inflation_long |>
+  filter(annual_inflation == max(annual_inflation, na.rm = TRUE))
+```
+The highest inflation rate observed was in Brazil in 1994.
+
 b.  What is the lowest inflation rate observed between 1993 and 2021? The output of the pipeline should be a data frame with one row and three columns. In addition to code and output, your response should include a single sentence stating the country and year.
+```{r}
+country_inflation_long |>
+  filter(annual_inflation == min(annual_inflation, na.rm = TRUE))
+```
+The lowest inflation rate observed was in Ireland in 2009
 
 c.  Putting (a) and (b) together: What are the highest and the lowest inflation rates observed between 1993 and 2021? The output of the pipeline should be a data frame with two rows and three columns.
+```{r}
+country_inflation_long |>
+  filter(
+    annual_inflation == max(annual_inflation, na.rm = TRUE) |
+    annual_inflation == min(annual_inflation, na.rm = TRUE)
+  )
+```
+The highest inflation rate was observed in Brazil in 1994 at approximately 2076% while the lowest inflation rate was observed in Ireland in 2009 at approximately -4.5%.
 
 ### Question 6
 
-a\. Create a vector called `countries_of_interest` which contains the names of up tp five countries you want to visualize the inflation rates for over the years. For example, if these countries are Türkiye and United States, you can express this as follows:
+a\. Create a vector called `countries_of_interest` which contains the names of up to five countries you want to visualize the inflation rates for over the years. For example, if these countries are Türkiye and United States, you can express this as follows:
 
 ```{r}
 countries_of_interest <- c("Türkiye", "United States")
@@ -176,7 +231,17 @@ countries_of_interest <- c(
 ```
 
 So on and so forth... Then, in 1-2 sentences, state why you chose these countries.
+```{r}
+countries_of_interest <- c(
+  "United States",
+  "China (People's Republic of)",
+  "Japan",
+  "Germany",
+  "India"
+)
+```
 
+I chose these five countries as they represent some of the world's largest economies accross different continents.
 ::: callout-note
 Your `countries_of_interest` should consist of no more than five countries. Make sure that the spelling of your countries matches how they appear in the dataset.
 :::
